@@ -1,0 +1,42 @@
+{
+    "xsappname": "product-app",
+    "tenant-mode": "dedicated",
+    "description": "Security profile for Product App",
+    "oauth2-configuration": {
+        "redirect-uris": [
+            "https://*.hana.ondemand.com/**",
+            "https://*.cfapps.us10-001.hana.ondemand.com/**",
+            "https://*.cfapps.us10.hana.ondemand.com/**"
+        ],
+        "token-validity": 43200
+    },
+    "scopes": [
+        {
+            "name": "$XSAPPNAME.Admin",
+            "description": "Admin access to Products"
+        },
+        {
+            "name": "$XSAPPNAME.Viewer",
+            "description": "Read-only access"
+        }
+    ],
+    "role-templates": [
+        {
+            "name": "ProductAdmin",
+            "description": "Full control over products",
+            "scope-references": ["$XSAPPNAME.Admin"]
+        },
+        {
+            "name": "ProductViewer",
+            "description": "View products only",
+            "scope-references": ["$XSAPPNAME.Viewer"]
+        }
+    ],
+    "role-collections": [
+        {
+            "name": "ProductAppAdmin",
+            "description": "Product App Administrator",
+            "role-template-references": ["$XSAPPNAME.ProductAdmin"]
+        }
+    ]
+}

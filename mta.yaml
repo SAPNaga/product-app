@@ -1,0 +1,94 @@
+_schema-version: "3.1"
+ID: product-app
+description: Product Management App
+version: 1.0.0
+
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm install --production
+        - npx cds build --production
+        - ./build-ui.sh
+
+modules:
+  - name: product-app-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: product-app-db
+
+  - name: product-app-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      buildpack: nodejs_buildpack
+      memory: 256M
+      disk-quota: 1024M
+    requires:
+      - name: product-app-db
+      - name: product-app-uaa
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+
+  - name: product-app-approuter
+    type: approuter.nodejs
+    path: app/router
+    parameters:
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: product-app-uaa
+      - name: product-app-html5-runtime
+
+  - name: product-app-ui-deployer
+    type: com.sap.application.content
+    path: resources
+    requires:
+      - name: product-app-html5-host
+        parameters:
+          content-target: true
+
+resources:
+  - name: product-app-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared
+
+  - name: product-app-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: product-app-${space}
+        tenant-mode: dedicated
+
+  - name: product-app-html5-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+
+  - name: product-app-html5-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+      config:
+        sizeLimit: 2

@@ -1,0 +1,13 @@
+node_modules/
+gen/
+mta_archives/
+dist/
+resources/
+.env
+default-env.json
+*.log
+.DS_Store
+.product-app_mta_build_tmp/
+app/router/resources/
+app/ui/dist/
+.vscode/
